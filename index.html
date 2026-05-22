@@ -109,16 +109,16 @@
     /* ── OS VIEW ── */
     .os-layout {
       max-width: 1400px; margin: 0 auto; padding: 20px;
-      display: grid; grid-template-columns: 1fr 380px; gap: 16px;
+      display: grid; grid-template-columns: 1fr; gap: 16px;
       min-height: calc(100vh - 62px);
     }
-    @media (max-width: 900px) {
-      .os-layout { grid-template-columns: 1fr; }
+    @media (min-width: 1000px) {
+      .os-layout { grid-template-columns: 1fr 380px; }
       .os-layout > div:last-child {
-        position: relative !important;
-        top: auto !important;
-        max-height: none !important;
-        align-self: auto !important;
+        position: sticky !important;
+        top: 78px !important;
+        max-height: calc(100vh - 94px) !important;
+        align-self: start !important;
       }
     }
     @media (max-width: 600px) {
