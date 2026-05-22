@@ -20,6 +20,19 @@
       max-width: 1400px; margin: 0 auto;
       padding: 10px 20px; display: flex; align-items: center; gap: 12px;
     }
+
+    @media (max-width: 700px) {
+      .topbar-inner {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 6px;
+        padding: 6px 8px;
+      }
+      .brand { grid-column: 1 / -1; }
+      .sep { display: none; }
+      .unit-tabs { grid-column: 1 / -1; }
+      .mainnav { grid-column: 1 / -1; justify-self: start; }
+    }
     .brand { display: flex; align-items: center; gap: 9px; }
     .brand-icon {
       width: 32px; height: 32px; border-radius: 9px;
@@ -30,6 +43,16 @@
     .brand-name { font-size: 15px; font-weight: 800; letter-spacing: -.4px; }
     .brand-sub  { font-size: 10px; color: #6e6e73; font-weight: 500; }
 
+    @media (max-width: 700px) {
+      .brand-icon { width: 26px; height: 26px; font-size: 14px; }
+      .brand-name { font-size: 13px; }
+      .brand-sub { display: none; }
+    }
+    @media (max-width: 480px) {
+      .brand-icon { width: 24px; height: 24px; font-size: 12px; }
+      .brand-name { font-size: 12px; }
+    }
+
     .sep { width: 1px; height: 24px; background: #e5e5e7; flex-shrink: 0; }
 
     /* unit filter */
@@ -37,9 +60,18 @@
     .unit-tab {
       font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 20px;
       border: 1.5px solid #e5e5e7; background: transparent; color: #6e6e73;
-      cursor: pointer; transition: all .15s;
+      cursor: pointer; transition: all .15s; flex: 1; text-align: center;
     }
     .unit-tab.on { background: #EBF8FF; border-color: #0369A1; color: #0369A1; }
+
+    @media (max-width: 700px) {
+      .unit-tabs { gap: 4px; width: 100%; }
+      .unit-tab { font-size: 10px; padding: 4px 8px; flex: 1; }
+    }
+    @media (max-width: 480px) {
+      .unit-tabs { gap: 3px; }
+      .unit-tab { font-size: 9px; padding: 3px 6px; }
+    }
 
     /* main nav */
     .mainnav { display: flex; gap: 2px; margin-left: auto; }
@@ -50,10 +82,14 @@
     .mainnav-btn.on { background: #EBF8FF; color: #0369A1; }
 
     @media (max-width: 700px) {
-      .topbar-inner { flex-wrap: wrap; }
-      .unit-tabs { order: 3; width: 100%; margin-top: 6px; }
-      .mainnav { order: 4; width: 100%; margin-left: 0; margin-top: 6px; }
+      .mainnav { gap: 4px; width: 100%; }
+      .mainnav-btn { font-size: 11px; padding: 5px 10px; flex: 1; text-align: center; }
     }
+    @media (max-width: 480px) {
+      .mainnav { gap: 3px; }
+      .mainnav-btn { font-size: 10px; padding: 4px 8px; }
+    }
+
     .mainnav-btn:hover:not(.on) { background: #f5f5f7; color: #1d1d1f; }
 
     .btn-primary {
