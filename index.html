@@ -830,6 +830,54 @@ const DEFAULT_FRONT_GOALS = [
   { id:'fg4', label:'Agrícola',        goal:15000, color:'#059669' },
 ]
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SUPABASE CONFIG & REST API
+// ═══════════════════════════════════════════════════════════════════════════
+const SB_URL = 'https://dompizuydmlekshmshyx.supabase.co'
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvbXBpc3V5ZG1sZWtzaG1zaHl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NjczNDIsImV4cCI6MjA5NTA0MzM0Mn0.yrKH8UD7UjkGJ57DzNy1BlwlGTzXDbeDW-w4gyLxDAg'
+
+async function sbFetch(table, method = 'GET', data = null) {
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SB_KEY,
+      'Authorization': `Bearer ${SB_KEY}`
+    }
+  }
+  if (data) opts.body = JSON.stringify(data)
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/${table}`, opts)
+    return res.ok ? await res.json() : null
+  } catch(e) { return null }
+}
+
+async function syncOrderToSB(ordem) {
+  await sbFetch('orders', 'POST', {
+    id: ordem.id,
+    order_number: ordem.num,
+    client_name: ordem.cliente,
+    vehicle_plate: ordem.placa,
+    vehicle_model: ordem.modelo,
+    vehicle_type: ordem.tipo,
+    origin: ordem.origem,
+    unit: ordem.unidade,
+    total: ordem.total,
+    status: ordem.status || 'Concluída',
+    observations: ordem.obs,
+    created_at: ordem.data
+  })
+}
+
+async function syncServiceToSB(svc) {
+  await sbFetch('services', 'POST', {
+    id: svc.id,
+    name: svc.name,
+    category: svc.cat,
+    price: svc.price
+  })
+}
+
 function load(key, def) { try { const r=localStorage.getItem(key); return r ? JSON.parse(r) : def; } catch(e) { return def; } }
 function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} }
 
@@ -986,6 +1034,7 @@ function saveSvc() {
     services.push(svc)
   }
   save('eq2_svcs', services)
+  if (!editingSvcId) syncServiceToSB(svc)
   closeSvcModal(); renderCatTabs(); renderServices()
   toast(editingSvcId ? 'Serviço atualizado' : 'Serviço adicionado')
 }
@@ -1061,6 +1110,7 @@ function finalizeOS() {
 
   ordens.unshift(os)
   save('eq2_ordens', ordens)
+  syncOrderToSB(os)
   closeCheckout()
   clearImg()
   cart = []
