@@ -889,6 +889,37 @@ async function loadOrdersFromSupabase() {
   } catch(e) { return [] }
 }
 
+async function syncServiceToSupabase(svc) {
+  if (!svc.id) return
+  try {
+    const { error } = await supabase
+      .from('services')
+      .upsert({
+        id: svc.id,
+        name: svc.name,
+        category: svc.cat,
+        price: svc.price
+      })
+    if (error) console.log('Service sync error:', error)
+  } catch(e) { console.log('Service sync exception:', e) }
+}
+
+async function loadServicesFromSupabase() {
+  try {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+    if (error) return []
+    return data.map(row => ({
+      id: row.id,
+      name: row.name,
+      cat: row.category,
+      price: row.price,
+      cost: 0
+    })) || []
+  } catch(e) { return [] }
+}
+
 let services    = load('eq2_svcs', [])
 let ordens      = load('eq2_ordens', [])
 let tecnicos    = load('eq2_tecnicos', DEFAULT_TECNICOS)
@@ -1030,13 +1061,17 @@ function saveSvc() {
   const price = +document.getElementById('svc-price').value
   if (!name || !price) { toast('Preencha nome e preço'); return }
   const obj = { name, cat: document.getElementById('svc-cat').value, price, cost: 0 }
+  let svc
   if (editingSvcId) {
     const idx = services.findIndex(s=>s.id===editingSvcId)
     services[idx] = { ...services[idx], ...obj }
+    svc = services[idx]
   } else {
-    services.push({ id:uid(), ...obj })
+    svc = { id:uid(), ...obj }
+    services.push(svc)
   }
   save('eq2_svcs', services)
+  syncServiceToSupabase(svc)
   closeSvcModal(); renderCatTabs(); renderServices()
   toast(editingSvcId ? 'Serviço atualizado' : 'Serviço adicionado')
 }
@@ -1612,12 +1647,21 @@ renderServices()
 renderCart()
 renderHistory()
 
-// Load orders from Supabase
+// Load orders and services from Supabase
 loadOrdersFromSupabase().then(sbOrders => {
   if (sbOrders.length > 0) {
     ordens = sbOrders
     save('eq2_ordens', ordens)
     renderHistory()
+  }
+})
+
+loadServicesFromSupabase().then(sbServices => {
+  if (sbServices.length > 0) {
+    services = sbServices
+    save('eq2_svcs', services)
+    renderCatTabs()
+    renderServices()
   }
 })
 </script>
