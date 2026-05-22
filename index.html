@@ -108,17 +108,29 @@
 
     /* ── OS VIEW ── */
     .os-layout {
-      max-width: 1400px; margin: 0 auto; padding: 20px;
+      max-width: 100%; margin: 0 auto; padding: 20px;
       display: grid; grid-template-columns: 1fr; gap: 16px;
       min-height: calc(100vh - 62px);
+      width: 100%;
+    }
+    .os-layout > div {
+      width: 100%;
+      min-width: 0;
     }
     @media (min-width: 1000px) {
-      .os-layout { grid-template-columns: 1fr 380px; }
+      .os-layout {
+        max-width: 1400px;
+        grid-template-columns: 1fr 380px;
+      }
+      .os-layout > div {
+        width: auto;
+      }
       .os-layout > div:last-child {
         position: sticky !important;
         top: 78px !important;
         max-height: calc(100vh - 94px) !important;
         align-self: start !important;
+        width: 380px;
       }
     }
     @media (max-width: 600px) {
