@@ -71,12 +71,21 @@
     }
     @media (max-width: 900px) { .os-layout { grid-template-columns: 1fr; } }
     @media (max-width: 600px) {
-      .os-layout { padding: 12px; gap: 12px; }
-      .topbar-inner { padding: 8px 12px; gap: 8px; }
-      .brand-name { font-size: 13px; }
-      .mainnav { gap: 0; }
-      .mainnav-btn { font-size: 11px; padding: 5px 10px; }
-      .btn-primary { padding: 6px 10px; font-size: 11px; }
+      .os-layout { padding: 10px; gap: 10px; }
+      .topbar-inner { padding: 6px 10px; gap: 6px; }
+      .brand-name { font-size: 12px; }
+      .brand-icon { width: 28px; height: 28px; font-size: 15px; }
+      .sep { display: none; }
+      .unit-tabs { gap: 2px; }
+      .unit-tab { font-size: 10px; padding: 4px 8px; }
+      .mainnav { gap: 0; margin-left: auto; }
+      .mainnav-btn { font-size: 10px; padding: 4px 8px; }
+      .btn-primary { padding: 5px 8px; font-size: 10px; }
+    }
+    @media (max-width: 480px) {
+      .os-layout { padding: 8px; gap: 8px; }
+      .topbar-inner { padding: 5px 8px; }
+      .brand-name { display: none; }
     }
 
     .panel {
@@ -86,6 +95,10 @@
     .panel-head {
       padding: 16px 18px 12px; border-bottom: 1px solid #f2f2f7;
       display: flex; align-items: center; gap: 10px;
+    }
+    @media (max-width: 600px) {
+      .panel { border-radius: 12px; }
+      .panel-head { padding: 12px 14px 10px; gap: 8px; }
     }
     .panel-title { font-size: 13px; font-weight: 700; }
     .search-wrap { position: relative; flex: 1; }
