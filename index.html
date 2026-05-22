@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Equipar — Vendas</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.0/+esm"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -831,94 +830,8 @@ const DEFAULT_FRONT_GOALS = [
   { id:'fg4', label:'Agrícola',        goal:15000, color:'#059669' },
 ]
 
-// Supabase Config
-const SUPABASE_URL = 'https://dompizuydmlekshmshyx.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvbXBpc3V5ZG1sZWtzaG1zaHl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NjczNDIsImV4cCI6MjA5NTA0MzM0Mn0.yrKH8UD7UjkGJ57DzNy1BlwlGTzXDbeDW-w4gyLxDAg'
-const { createClient } = window.supabase
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
-
 function load(key, def) { try { const r=localStorage.getItem(key); return r ? JSON.parse(r) : def; } catch(e) { return def; } }
 function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} }
-
-// Sync to Supabase
-async function syncOrderToSupabase(ordem) {
-  if (!ordem.id) return
-  try {
-    const { data, error } = await supabase
-      .from('orders')
-      .upsert({
-        id: ordem.id,
-        order_number: ordem.num,
-        client_name: ordem.cliente,
-        vehicle_plate: ordem.placa,
-        vehicle_model: ordem.modelo,
-        vehicle_type: ordem.tipo,
-        origin: ordem.origem,
-        unit: ordem.unidade,
-        total: ordem.total,
-        status: ordem.status || 'Concluída',
-        observations: ordem.obs,
-        print_image: ordem.printBase64 ? ordem.printBase64.substring(0, 100) : null,
-        created_at: ordem.data
-      })
-    if (error) console.log('Sync error:', error)
-  } catch(e) { console.log('Sync exception:', e) }
-}
-
-async function loadOrdersFromSupabase() {
-  try {
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false })
-    if (error) return []
-    return data.map(row => ({
-      id: row.id,
-      num: row.order_number,
-      cliente: row.client_name,
-      placa: row.vehicle_plate,
-      modelo: row.vehicle_model,
-      tipo: row.vehicle_type,
-      origem: row.origin,
-      unidade: row.unit,
-      total: row.total,
-      status: row.status,
-      obs: row.observations,
-      data: row.created_at
-    })) || []
-  } catch(e) { return [] }
-}
-
-async function syncServiceToSupabase(svc) {
-  if (!svc.id) return
-  try {
-    const { error } = await supabase
-      .from('services')
-      .upsert({
-        id: svc.id,
-        name: svc.name,
-        category: svc.cat,
-        price: svc.price
-      })
-    if (error) console.log('Service sync error:', error)
-  } catch(e) { console.log('Service sync exception:', e) }
-}
-
-async function loadServicesFromSupabase() {
-  try {
-    const { data, error } = await supabase
-      .from('services')
-      .select('*')
-    if (error) return []
-    return data.map(row => ({
-      id: row.id,
-      name: row.name,
-      cat: row.category,
-      price: row.price,
-      cost: 0
-    })) || []
-  } catch(e) { return [] }
-}
 
 let services    = load('eq2_svcs', [])
 let ordens      = load('eq2_ordens', [])
@@ -1073,7 +986,6 @@ function saveSvc() {
     services.push(svc)
   }
   save('eq2_svcs', services)
-  syncServiceToSupabase(svc)
   closeSvcModal(); renderCatTabs(); renderServices()
   toast(editingSvcId ? 'Serviço atualizado' : 'Serviço adicionado')
 }
@@ -1149,7 +1061,6 @@ function finalizeOS() {
 
   ordens.unshift(os)
   save('eq2_ordens', ordens)
-  syncOrderToSupabase(os)
   closeCheckout()
   clearImg()
   cart = []
@@ -1224,7 +1135,6 @@ function saveEditOs() {
     obs:     document.getElementById('eos-obs').value.trim(),
   }
   save('eq2_ordens', ordens)
-  syncOrderToSupabase(ordens[idx])
   closeEditOs(); renderHistory(); renderCrm()
   toast('Venda atualizada')
 }
@@ -1648,23 +1558,6 @@ renderServices()
 renderCart()
 renderHistory()
 
-// Load orders and services from Supabase
-loadOrdersFromSupabase().then(sbOrders => {
-  if (sbOrders.length > 0) {
-    ordens = sbOrders
-    save('eq2_ordens', ordens)
-    renderHistory()
-  }
-})
-
-loadServicesFromSupabase().then(sbServices => {
-  if (sbServices.length > 0) {
-    services = sbServices
-    save('eq2_svcs', services)
-    renderCatTabs()
-    renderServices()
-  }
-})
 </script>
 </body>
 </html>
