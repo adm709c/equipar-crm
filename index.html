@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Equipar — Vendas</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #F5F5F7; font-family: 'Inter', system-ui, sans-serif; color: #1d1d1f; min-height: 100vh; }
+
+    /* ── NAV ── */
+    .topbar {
+      background: rgba(255,255,255,.92);
+      border-bottom: 1px solid rgba(0,0,0,.08);
+      position: sticky; top: 0; z-index: 40;
+    }
+    .topbar-inner {
+      max-width: 1400px; margin: 0 auto;
+      padding: 10px 20px; display: flex; align-items: center; gap: 12px;
+    }
+    .brand { display: flex; align-items: center; gap: 9px; }
+    .brand-icon {
+      width: 32px; height: 32px; border-radius: 9px;
+      background: linear-gradient(135deg, #0369A1 0%, #06B6D4 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; flex-shrink: 0;
+    }
+    .brand-name { font-size: 15px; font-weight: 800; letter-spacing: -.4px; }
+    .brand-sub  { font-size: 10px; color: #6e6e73; font-weight: 500; }
+
+    .sep { width: 1px; height: 24px; background: #e5e5e7; flex-shrink: 0; }
+
+    /* unit filter */
+    .unit-tabs { display: flex; gap: 3px; }
+    .unit-tab {
+      font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 20px;
+      border: 1.5px solid #e5e5e7; background: transparent; color: #6e6e73;
+      cursor: pointer; transition: all .15s;
+    }
+    .unit-tab.on { background: #EBF8FF; border-color: #0369A1; color: #0369A1; }
+
+    /* main nav */
+    .mainnav { display: flex; gap: 2px; margin-left: auto; }
+    .mainnav-btn {
+      font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 10px;
+      border: none; background: none; color: #6e6e73; cursor: pointer; transition: all .15s;
+    }
+    .mainnav-btn.on { background: #EBF8FF; color: #0369A1; }
+    .mainnav-btn:hover:not(.on) { background: #f5f5f7; color: #1d1d1f; }
+
+    .btn-primary {
+      display: flex; align-items: center; gap: 5px;
+      padding: 8px 14px; border-radius: 10px; border: none;
+      background: #0369A1; color: #fff;
+      font-size: 12px; font-weight: 700; cursor: pointer; transition: background .15s;
+      white-space: nowrap;
+    }
+    .btn-primary:hover { background: #025985; }
+
+    /* ── VIEWS ── */
+    .view { display: none; }
+    .view.on { display: block; }
+
+    /* ── OS VIEW ── */
+    .os-layout {
+      max-width: 1400px; margin: 0 auto; padding: 20px;
+      display: grid; grid-template-columns: 1fr 380px; gap: 16px;
+      min-height: calc(100vh - 62px);
+    }
+    @media (max-width: 900px) { .os-layout { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: #fff; border-radius: 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 6px 16px rgba(0,0,0,.04);
+    }
+    .panel-head {
+      padding: 16px 18px 12px; border-bottom: 1px solid #f2f2f7;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .panel-title { font-size: 13px; font-weight: 700; }
+    .search-wrap { position: relative; flex: 1; }
+    .search-wrap input {
+      width: 100%; border: 1.5px solid #e5e5e7; border-radius: 10px;
+      padding: 8px 12px 8px 34px; font-size: 13px; font-family: inherit;
+      outline: none; transition: border-color .15s;
+    }
+    .search-wrap input:focus { border-color: #0369A1; }
+    .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #aeaeb2; font-size: 14px; }
+
+    /* category tabs */
+    .cat-tabs { display: flex; gap: 6px; padding: 12px 18px; overflow-x: auto; }
+    .cat-tabs::-webkit-scrollbar { display: none; }
+    .cat-tab {
+      font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 20px;
+      border: 1.5px solid #e5e5e7; background: transparent; color: #6e6e73;
+      cursor: pointer; transition: all .15s; white-space: nowrap;
+    }
+    .cat-tab.on { background: #0369A1; border-color: #0369A1; color: #fff; }
+
+    /* services grid */
+    .services-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px; padding: 0 18px 18px;
+    }
+    .svc-card {
+      border: 1.5px solid #f2f2f7; border-radius: 14px; padding: 13px 14px;
+      cursor: pointer; transition: all .15s; background: #fafafa;
+    }
+    .svc-card:hover { border-color: #0369A1; background: #EBF8FF; }
+    .svc-card:active { transform: scale(.98); }
+    .svc-name  { font-size: 13px; font-weight: 600; color: #1d1d1f; margin-bottom: 4px; }
+    .svc-cat   { font-size: 10px; font-weight: 700; color: #6e6e73; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
+    .svc-price { font-size: 15px; font-weight: 800; color: #0369A1; }
+
+    /* Cart */
+    .cart-wrap { display: flex; flex-direction: column; height: 100%; }
+    .cart-items { flex: 1; padding: 14px 16px; overflow-y: auto; }
+    .cart-items::-webkit-scrollbar { width: 4px; }
+    .cart-items::-webkit-scrollbar-thumb { background: #d1d1d6; border-radius: 4px; }
+    .cart-empty { text-align: center; padding: 40px 16px; color: #aeaeb2; }
+    .cart-empty-icon { font-size: 36px; margin-bottom: 8px; }
+
+    .cart-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid #f5f5f7;
+    }
+    .ci-name  { flex: 1; font-size: 13px; font-weight: 500; }
+    .ci-price { font-size: 13px; font-weight: 700; color: #0369A1; }
+    .ci-qty   { display: flex; align-items: center; gap: 6px; }
+    .qty-btn  { width: 24px; height: 24px; border-radius: 8px; border: none;
+                background: #f2f2f7; color: #1d1d1f; font-size: 14px; font-weight: 700;
+                cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .qty-val  { font-size: 13px; font-weight: 700; min-width: 20px; text-align: center; }
+    .ci-del   { background: none; border: none; color: #d1d1d6; cursor: pointer; font-size: 16px; line-height: 1; transition: color .15s; }
+    .ci-del:hover { color: #ff3b30; }
+
+    .cart-total-row {
+      padding: 14px 16px; border-top: 1px solid #f2f2f7;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .total-label { font-size: 12px; font-weight: 600; color: #6e6e73; }
+    .total-val   { font-size: 20px; font-weight: 800; color: #1d1d1f; }
+    .cart-cta { padding: 0 16px 16px; }
+    .btn-checkout {
+      width: 100%; padding: 13px; border-radius: 12px; border: none;
+      background: linear-gradient(135deg, #0369A1, #0284C7);
+      color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity .15s;
+    }
+    .btn-checkout:hover { opacity: .9; }
+    .btn-checkout:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* OS History */
+    .history-head {
+      padding: 14px 18px 10px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f2f2f7;
+    }
+    .os-table-wrap { overflow-x: auto; }
+    .os-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .os-table th { text-align: left; padding: 8px 14px; font-size: 10px; font-weight: 700; color: #aeaeb2; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid #f2f2f7; }
+    .os-table td { padding: 10px 14px; border-bottom: 1px solid #f9f9fb; vertical-align: middle; }
+    .os-table tr:hover td { background: #fafafa; }
+    .status-badge { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+    .s-concluida  { background: #e9faf0; color: #1a8a42; }
+    .s-aguardando { background: #fff8e6; color: #b85c00; }
+    .s-cancelada  { background: #fff0f0; color: #d4000e; }
+    .tbl-btn { background: none; border: none; cursor: pointer; color: #d1d1d6; font-size: 14px; padding: 3px 5px; border-radius: 6px; transition: color .15s; }
+    .tbl-btn:hover { color: #0369A1; }
+    .tbl-btn.del:hover { color: #ff3b30; }
+
+    /* ── CRM VIEW ── */
+    .crm-layout { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    .period-bar { display: flex; gap: 4px; margin-bottom: 20px; }
+    .period-btn {
+      font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 10px;
+      border: 1.5px solid #e5e5e7; background: #fff; color: #6e6e73; cursor: pointer; transition: all .15s;
+    }
+    .period-btn.on { background: #1d1d1f; border-color: #1d1d1f; color: #fff; }
+    .custom-dates { display: flex; gap: 8px; align-items: center; }
+    .custom-dates input { border: 1.5px solid #e5e5e7; border-radius: 10px; padding: 6px 10px; font-size: 12px; font-family: inherit; outline: none; }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .kpi-card {
+      background: #fff; border-radius: 16px; padding: 18px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 6px 16px rgba(0,0,0,.04);
+    }
+    .kpi-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; font-size: 18px; }
+    .kpi-val  { font-size: 24px; font-weight: 800; color: #1d1d1f; margin-bottom: 3px; }
+    .kpi-lbl  { font-size: 12px; color: #6e6e73; font-weight: 500; }
+
+    .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 16px; }
+    @media (max-width: 800px) { .charts-grid { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: #fff; border-radius: 16px; padding: 18px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 6px 16px rgba(0,0,0,.04);
+    }
+    .chart-title { font-size: 13px; font-weight: 700; margin-bottom: 14px; }
+    .chart-wrap  { position: relative; }
+
+    .origin-list { list-style: none; }
+    .origin-item { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid #f5f5f7; }
+    .origin-item:last-child { border-bottom: none; }
+    .origin-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .origin-name { flex: 1; font-size: 12px; color: #3c3c43; }
+    .origin-val  { font-size: 12px; font-weight: 700; color: #1d1d1f; }
+    .origin-pct  { font-size: 11px; color: #aeaeb2; min-width: 32px; text-align: right; }
+
+    .recent-os { margin-top: 16px; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 6px 16px rgba(0,0,0,.04); }
+    .recent-head { padding: 14px 18px; border-bottom: 1px solid #f2f2f7; font-size: 13px; font-weight: 700; }
+
+    /* ── FINANCEIRO VIEW ── */
+    .fin-layout { max-width: 1000px; margin: 0 auto; padding: 20px; }
+    .fin-lock {
+      background: #fff; border-radius: 18px; padding: 40px;
+      text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 6px 16px rgba(0,0,0,.04);
+      max-width: 320px; margin: 60px auto;
+    }
+    .fin-lock-icon { font-size: 32px; margin-bottom: 14px; }
+    .fin-lock h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .fin-lock p { font-size: 12px; color: #6e6e73; margin-bottom: 18px; }
+    .fin-lock input {
+      width: 100%; border: 1.5px solid #e5e5e7; border-radius: 10px;
+      padding: 10px; font-size: 14px; text-align: center; letter-spacing: 4px;
+      outline: none; margin-bottom: 10px; font-family: inherit;
+    }
+    .fin-lock input.err { border-color: #ff3b30; background: #fff5f5; }
+    .fin-lock button { width: 100%; }
+
+    .fin-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    @media (max-width: 700px) { .fin-kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .fin-section { background: #fff; border-radius: 16px; overflow: hidden; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 6px 16px rgba(0,0,0,.04); }
+    .fin-section-head {
+      padding: 14px 18px; border-bottom: 1px solid #f2f2f7;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .fin-section-title { font-size: 13px; font-weight: 700; }
+    .fin-section-body { padding: 16px 18px; }
+
+    .expense-form { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .expense-form input, .expense-form select {
+      border: 1.5px solid #e5e5e7; border-radius: 9px; padding: 8px 11px;
+      font-size: 12px; font-family: inherit; outline: none; flex: 1; min-width: 130px;
+    }
+    .expense-form input:focus, .expense-form select:focus { border-color: #0369A1; }
+    .expense-list { display: flex; flex-direction: column; gap: 6px; }
+    .expense-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 10px; background: #f9f9fb;
+    }
+    .exp-cat   { font-size: 11px; font-weight: 700; color: #6e6e73; min-width: 100px; }
+    .exp-desc  { flex: 1; font-size: 12px; color: #3c3c43; }
+    .exp-val   { font-size: 13px; font-weight: 700; color: #1d1d1f; }
+    .exp-date  { font-size: 11px; color: #aeaeb2; min-width: 70px; text-align: right; }
+    .exp-del   { background: none; border: none; color: #d1d1d6; cursor: pointer; font-size: 15px; transition: color .15s; }
+    .exp-del:hover { color: #ff3b30; }
+
+    .goal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 600px) { .goal-grid { grid-template-columns: 1fr; } }
+    .goal-item { padding: 12px; background: #f9f9fb; border-radius: 12px; }
+    .goal-item-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .goal-item-label { font-size: 13px; font-weight: 600; }
+    .goal-item-pct   { font-size: 12px; font-weight: 700; }
+    .goal-bar { height: 6px; background: #e5e5e7; border-radius: 999px; overflow: hidden; margin-bottom: 6px; }
+    .goal-bar-fill { height: 6px; border-radius: 999px; transition: width .4s; }
+    .goal-sub { display: flex; justify-content: space-between; font-size: 11px; color: #6e6e73; }
+
+    .tecnico-list { display: flex; flex-direction: column; gap: 8px; }
+    .tecnico-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: #f9f9fb; border-radius: 10px; }
+    .tecnico-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+    .tecnico-name  { flex: 1; font-size: 13px; font-weight: 600; }
+    .tecnico-count { font-size: 12px; color: #6e6e73; }
+    .tecnico-del   { background: none; border: none; color: #d1d1d6; cursor: pointer; font-size: 15px; transition: color .15s; }
+    .tecnico-del:hover { color: #ff3b30; }
+    .tecnico-add-form { display: flex; gap: 8px; margin-top: 10px; }
+    .tecnico-add-form input { flex: 1; border: 1.5px solid #e5e5e7; border-radius: 9px; padding: 8px 11px; font-size: 13px; font-family: inherit; outline: none; }
+
+    /* ── MODAL ── */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.3);
+      z-index: 200; display: none; align-items: center; justify-content: center;
+    }
+    .overlay.on { display: flex; }
+    .modal {
+      background: #fff; border-radius: 20px; padding: 24px;
+      width: 100%; max-width: 460px; margin: 16px;
+      box-shadow: 0 24px 60px rgba(0,0,0,.2); max-height: 90vh; overflow-y: auto;
+    }
+    .modal-title { font-size: 15px; font-weight: 700; margin-bottom: 18px; }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 11px; font-weight: 700; color: #6e6e73; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
+    .field input, .field select, .field textarea {
+      width: 100%; border: 1.5px solid #e5e5e7; border-radius: 10px;
+      padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none;
+      transition: border-color .15s; background: #fff;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: #0369A1; }
+    .field input.err { border-color: #ff3b30; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .field-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .radio-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    .radio-btn {
+      padding: 7px 14px; border-radius: 10px; border: 1.5px solid #e5e5e7;
+      font-size: 12px; font-weight: 600; color: #6e6e73; cursor: pointer;
+      background: none; transition: all .15s;
+    }
+    .radio-btn.on { background: #1d1d1f; border-color: #1d1d1f; color: #fff; }
+    .modal-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+    .btn-cancel { background: #f5f5f7; color: #3c3c43; border: none; border-radius: 10px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-save   { background: #0369A1; color: #fff; border: none; border-radius: 10px; padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-save:hover { background: #025985; }
+    .btn-danger { background: #fff0f0; color: #d4000e; border: none; border-radius: 10px; padding: 9px 14px; font-size: 13px; font-weight: 700; cursor: pointer; margin-right: auto; }
+
+    /* Margin preview */
+    .margin-preview { border-radius: 10px; padding: 10px 12px; font-size: 12px; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .margin-good   { background: #e9faf0; color: #1a8a42; }
+    .margin-ok     { background: #fff8e6; color: #b85c00; }
+    .margin-bad    { background: #fff0f0; color: #d4000e; }
+
+    /* Gallery */
+    .gallery-card {
+      border-radius: 12px; overflow: hidden; background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 10px rgba(0,0,0,.05);
+      cursor: pointer; transition: transform .15s, box-shadow .15s;
+    }
+    .gallery-card:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,.12); }
+    .gallery-img { width: 100%; height: 130px; object-fit: cover; display: block; }
+    .gallery-info { padding: 8px 10px; }
+    .gallery-client { font-size: 12px; font-weight: 700; color: #1d1d1f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .gallery-meta   { font-size: 10px; color: #aeaeb2; margin-top: 2px; }
+    .gallery-origin { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; background: #EBF8FF; color: #0369A1; display: inline-block; margin-top: 4px; }
+    .gallery-empty  { grid-column: 1/-1; text-align: center; padding: 30px; color: #aeaeb2; font-size: 13px; }
+
+    /* Lightbox */
+    .lightbox {
+      position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 500;
+      display: none; align-items: center; justify-content: center; flex-direction: column; gap: 12px;
+    }
+    .lightbox.on { display: flex; }
+    .lightbox img { max-width: 90vw; max-height: 80vh; border-radius: 12px; object-fit: contain; }
+    .lightbox-info { color: #fff; font-size: 13px; font-weight: 600; text-align: center; }
+    .lightbox-close { position: absolute; top: 16px; right: 20px; background: none; border: none; color: #fff; font-size: 28px; cursor: pointer; line-height: 1; }
+
+    /* Receipt */
+    @media print {
+      body > *:not(#receipt-frame) { display: none !important; }
+      #receipt-frame { display: block !important; }
+    }
+    #receipt-frame { display: none; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(10px);
+      background: #1d1d1f; color: #fff; padding: 10px 20px; border-radius: 999px;
+      font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none;
+      transition: opacity .25s, transform .25s; z-index: 999; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-icon">❄️</div>
+      <div>
+        <div class="brand-name">Equipar</div>
+        <div class="brand-sub">Vendas</div>
+      </div>
+    </div>
+    <div class="sep"></div>
+    <div class="unit-tabs">
+      <button class="unit-tab on" data-u="Ambas"    onclick="setUnit('Ambas')">Ambas</button>
+      <button class="unit-tab"    data-u="Prazeres" onclick="setUnit('Prazeres')">Prazeres</button>
+      <button class="unit-tab"    data-u="Goiana"   onclick="setUnit('Goiana')">Goiana</button>
+    </div>
+    <div class="mainnav">
+      <button class="mainnav-btn on" onclick="showView('os')">🔧 Vendas</button>
+      <button class="mainnav-btn"    onclick="showView('crm')">📊 Resumo Geral</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════════════ OS VIEW -->
+<div class="view on" id="view-os">
+  <div class="os-layout">
+
+    <!-- LEFT: Catalog + History -->
+    <div>
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <div class="panel-title">Serviços</div>
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input id="svc-search" placeholder="Buscar serviço…" oninput="renderServices()">
+          </div>
+          <button class="btn-primary" onclick="openSvcModal()">＋ Serviço</button>
+        </div>
+        <div class="cat-tabs" id="cat-tabs"></div>
+        <div class="services-grid" id="services-grid"></div>
+      </div>
+
+      <!-- History -->
+      <div class="panel">
+        <div class="history-head">
+          <span class="panel-title">Histórico de Vendas</span>
+        </div>
+        <div class="os-table-wrap">
+          <table class="os-table">
+            <thead>
+              <tr>
+                <th>#</th><th>Cliente / Veículo</th><th>Serviços</th><th>Total</th>
+                <th>Vendedor</th><th>Unidade</th><th>Status</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="os-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Cart -->
+    <div class="panel" style="position:sticky;top:78px;align-self:start;max-height:calc(100vh - 94px);display:flex;flex-direction:column;">
+      <div class="panel-head" style="flex-shrink:0">
+        <div class="panel-title">🛒 Carrinho</div>
+        <span id="cart-count" style="font-size:11px;color:#aeaeb2;margin-left:auto;">0 itens</span>
+      </div>
+      <div class="cart-wrap">
+        <div class="cart-items" id="cart-items">
+          <div class="cart-empty"><div class="cart-empty-icon">🔧</div>Adicione serviços ao carrinho</div>
+        </div>
+        <div class="cart-total-row">
+          <span class="total-label">TOTAL</span>
+          <span class="total-val" id="cart-total">R$ 0,00</span>
+        </div>
+        <div class="cart-cta">
+          <button class="btn-checkout" id="btn-checkout" onclick="openCheckout()" disabled>Finalizar Venda</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ CRM VIEW -->
+<div class="view" id="view-crm">
+  <div class="crm-layout">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <div class="period-bar">
+        <button class="period-btn on" data-p="month" onclick="setPeriod('month')">Este mês</button>
+        <button class="period-btn" data-p="week"  onclick="setPeriod('week')">7 dias</button>
+        <button class="period-btn" data-p="today" onclick="setPeriod('today')">Hoje</button>
+        <button class="period-btn" data-p="custom" onclick="setPeriod('custom')">Personalizado</button>
+      </div>
+      <div class="custom-dates" id="custom-dates" style="display:none">
+        <input type="date" id="date-start"> <span style="color:#aeaeb2">até</span> <input type="date" id="date-end">
+        <button class="btn-primary" onclick="applyCrm()" style="padding:7px 12px;">Aplicar</button>
+      </div>
+    </div>
+
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Receita por Dia</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="chart-daily"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Origem dos Clientes</div>
+        <ul class="origin-list" id="origin-list"></ul>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Receita por Tipo de Veículo</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="chart-vtype"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Vendas por Unidade</div>
+        <ul class="origin-list" id="unit-list"></ul>
+      </div>
+    </div>
+
+    <!-- Galeria de Prints -->
+    <div class="recent-os" style="margin-bottom:16px">
+      <div class="recent-head">📷 Galeria de Prints de Conversa</div>
+      <div id="gallery-grid" style="padding:16px 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;"></div>
+    </div>
+
+    <!-- Vendedores -->
+    <div class="recent-os" style="margin-bottom:16px">
+      <div class="recent-head" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Vendedores</span>
+      </div>
+      <div style="padding:16px 18px">
+        <div class="tecnico-list" id="tecnico-list"></div>
+        <div class="tecnico-add-form">
+          <input id="new-tecnico" placeholder="Nome do vendedor…" onkeydown="if(event.key==='Enter')addTecnico()">
+          <button class="btn-primary" onclick="addTecnico()">＋ Adicionar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="recent-os">
+      <div class="recent-head">Vendas Recentes</div>
+      <div class="os-table-wrap">
+        <table class="os-table">
+          <thead><tr><th>#</th><th>Cliente</th><th>Total</th><th>Vendedor</th><th>Unidade</th><th>Status</th></tr></thead>
+          <tbody id="crm-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ FINANCEIRO VIEW -->
+<div class="view" id="view-fin">
+  <div class="fin-layout">
+
+    <!-- Lock screen -->
+    <div class="fin-lock" id="fin-lock">
+      <div class="fin-lock-icon">🔒</div>
+      <h3>Área Restrita</h3>
+      <p>Digite a senha para acessar o Financeiro</p>
+      <input type="password" id="fin-pw" placeholder="••••••" onkeydown="if(event.key==='Enter')checkFinPw()">
+      <button class="btn-primary" onclick="checkFinPw()" style="justify-content:center;width:100%">Acessar</button>
+    </div>
+
+    <!-- Fin content -->
+    <div id="fin-content" style="display:none">
+
+      <div class="fin-kpi-grid" id="fin-kpi-grid"></div>
+
+      <!-- Meta Global -->
+      <div class="fin-section" style="margin-bottom:14px">
+        <div class="fin-section-head">
+          <span class="fin-section-title">Meta do Mês</span>
+          <button onclick="editGoal()" style="background:#f5f5f7;border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;">✎ Editar</button>
+        </div>
+        <div class="fin-section-body">
+          <div id="goal-bar-wrap" style="margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:6px">
+              <span id="goal-revenue">R$ 0</span>
+              <span id="goal-pct" style="color:#0369A1">0%</span>
+            </div>
+            <div class="goal-bar"><div class="goal-bar-fill" id="goal-bar-fill" style="background:#0369A1;width:0%"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:#aeaeb2;margin-top:4px">
+              <span>Meta: <b id="goal-target">—</b></span>
+              <span>Faltam: <b id="goal-remaining">—</b></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metas por Frente -->
+      <div class="fin-section" style="margin-bottom:14px">
+        <div class="fin-section-head"><span class="fin-section-title">Metas por Tipo de Veículo</span></div>
+        <div class="fin-section-body">
+          <div class="goal-grid" id="front-goals"></div>
+        </div>
+      </div>
+
+      <!-- Despesas -->
+      <div class="fin-section" style="margin-bottom:14px">
+        <div class="fin-section-head">
+          <span class="fin-section-title">Despesas do Mês</span>
+          <span id="total-expenses-lbl" style="font-size:13px;font-weight:700;color:#ff3b30"></span>
+        </div>
+        <div class="fin-section-body">
+          <div class="expense-form">
+            <select id="exp-cat">
+              <option value="">Categoria…</option>
+              <option>Aluguel</option>
+              <option>Energia</option>
+              <option>Água</option>
+              <option>Internet</option>
+              <option>Salários</option>
+              <option>Peças / Insumos</option>
+              <option>Marketing</option>
+              <option>Contabilidade</option>
+              <option>Outros</option>
+            </select>
+            <input id="exp-desc" placeholder="Descrição…">
+            <input id="exp-val" type="number" placeholder="R$ Valor">
+            <input id="exp-date" type="date">
+            <button class="btn-primary" onclick="addExpense()" style="flex-shrink:0">＋</button>
+          </div>
+          <div class="expense-list" id="expense-list"></div>
+        </div>
+      </div>
+
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ MODALS ═══════════════════════ -->
+
+<!-- Checkout modal -->
+<div class="overlay" id="overlay-checkout" onclick="if(event.target===this)closeCheckout()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Finalizar Venda</div>
+    <div class="field-row">
+      <div class="field">
+        <label>Cliente</label>
+        <input id="co-client" placeholder="Nome do cliente…">
+      </div>
+      <div class="field">
+        <label>Placa / Identificação</label>
+        <input id="co-placa" placeholder="Ex: ABC-1234">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Modelo do Veículo</label>
+        <input id="co-veiculo" placeholder="Ex: HB20, Scania R450">
+      </div>
+      <div class="field">
+        <label>Tipo de Veículo</label>
+        <select id="co-vtipo">
+          <option>Automóvel</option>
+          <option>Moto</option>
+          <option>Veículo Pesado</option>
+          <option>Agrícola</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Como nos encontrou?</label>
+      <div class="radio-group" id="co-origem-group">
+        <button class="radio-btn on" data-v="WhatsApp" onclick="selectRadio('co-origem-group',this)">WhatsApp</button>
+        <button class="radio-btn" data-v="Instagram" onclick="selectRadio('co-origem-group',this)">Instagram</button>
+        <button class="radio-btn" data-v="Indicação" onclick="selectRadio('co-origem-group',this)">Indicação</button>
+        <button class="radio-btn" data-v="Passante" onclick="selectRadio('co-origem-group',this)">Passante</button>
+        <button class="radio-btn" data-v="Google" onclick="selectRadio('co-origem-group',this)">Google</button>
+        <button class="radio-btn" data-v="Tráfego Pago" onclick="selectRadio('co-origem-group',this)">Tráfego Pago</button>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Unidade</label>
+        <div class="radio-group" id="co-unit-group">
+          <button class="radio-btn on" data-v="Prazeres" onclick="selectRadio('co-unit-group',this)">Prazeres</button>
+          <button class="radio-btn" data-v="Goiana" onclick="selectRadio('co-unit-group',this)">Goiana</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Vendedor</label>
+        <select id="co-tecnico"></select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Observações</label>
+      <textarea id="co-obs" rows="2" placeholder="Defeito relatado, observações técnicas…"></textarea>
+    </div>
+    <div class="field">
+      <label>Print da Conversa <span style="color:#ff3b30">*</span></label>
+      <div id="co-img-drop" onclick="document.getElementById('co-img-input').click()"
+        style="border:2px dashed #e5e5e7;border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:all .15s;background:#fafafa;">
+        <div id="co-img-preview" style="display:none;position:relative;">
+          <img id="co-img-thumb" style="max-height:140px;border-radius:8px;max-width:100%;object-fit:contain;">
+          <button onclick="event.stopPropagation();clearImg()" style="position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:#ff3b30;color:#fff;border:none;font-size:13px;cursor:pointer;line-height:1;">✕</button>
+        </div>
+        <div id="co-img-placeholder" style="color:#aeaeb2;font-size:13px;">
+          📷 Clique para anexar print da conversa (apenas o início)
+        </div>
+      </div>
+      <input type="file" id="co-img-input" accept="image/*" style="display:none" onchange="handleImgUpload(this)">
+    </div>
+    <div style="padding:12px 14px;background:#f9f9fb;border-radius:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:13px;color:#6e6e73;font-weight:600">Total da Venda</span>
+      <span style="font-size:20px;font-weight:800;color:#0369A1" id="co-total-display">R$ 0,00</span>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeCheckout()">Cancelar</button>
+      <button class="btn-primary" onclick="finalizeOS()" style="padding:9px 18px;">✅ Confirmar Venda</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit OS modal -->
+<div class="overlay" id="overlay-edit-os" onclick="if(event.target===this)closeEditOs()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Editar Venda</div>
+    <input type="hidden" id="eos-id">
+    <div class="field-row">
+      <div class="field"><label>Cliente</label><input id="eos-client"></div>
+      <div class="field"><label>Veículo</label><input id="eos-veiculo"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Valor Total (R$)</label><input id="eos-value" type="number"></div>
+      <div class="field"><label>Data</label><input id="eos-date" type="date"></div>
+    </div>
+    <div class="field">
+      <label>Status</label>
+      <div class="radio-group" id="eos-status-group">
+        <button class="radio-btn on" data-v="Concluída" onclick="selectRadio('eos-status-group',this)">Concluída</button>
+        <button class="radio-btn" data-v="Aguardando" onclick="selectRadio('eos-status-group',this)">Aguardando</button>
+        <button class="radio-btn" data-v="Cancelada" onclick="selectRadio('eos-status-group',this)">Cancelada</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Origem do Cliente</label>
+      <div class="radio-group" id="eos-origem-group">
+        <button class="radio-btn" data-v="WhatsApp" onclick="selectRadio('eos-origem-group',this)">WhatsApp</button>
+        <button class="radio-btn" data-v="Instagram" onclick="selectRadio('eos-origem-group',this)">Instagram</button>
+        <button class="radio-btn" data-v="Indicação" onclick="selectRadio('eos-origem-group',this)">Indicação</button>
+        <button class="radio-btn" data-v="Passante" onclick="selectRadio('eos-origem-group',this)">Passante</button>
+        <button class="radio-btn" data-v="Google" onclick="selectRadio('eos-origem-group',this)">Google</button>
+        <button class="radio-btn" data-v="Tráfego Pago" onclick="selectRadio('eos-origem-group',this)">Tráfego Pago</button>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Vendedor</label><select id="eos-tecnico"></select></div>
+      <div class="field">
+        <label>Unidade</label>
+        <select id="eos-unit"><option>Prazeres</option><option>Goiana</option></select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Tipo de Veículo</label>
+      <select id="eos-vtipo">
+        <option>Automóvel</option><option>Moto</option>
+        <option>Veículo Pesado</option><option>Agrícola</option>
+      </select>
+    </div>
+    <div class="field"><label>Observações</label><textarea id="eos-obs" rows="2"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn-danger" onclick="deleteOs()">Excluir</button>
+      <button class="btn-cancel" onclick="closeEditOs()">Cancelar</button>
+      <button class="btn-save" onclick="saveEditOs()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Service modal -->
+<div class="overlay" id="overlay-svc" onclick="if(event.target===this)closeSvcModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="svc-modal-title">Novo Serviço</div>
+    <input type="hidden" id="svc-id">
+    <div class="field"><label>Nome do Serviço</label><input id="svc-name" placeholder="Ex: Carga de Gás R134a"></div>
+    <div class="field">
+      <label>Categoria</label>
+      <select id="svc-cat">
+        <option>AC Automotivo</option>
+        <option>Elétrica</option>
+        <option>Higienização</option>
+        <option>Mangueiras</option>
+        <option>Solda</option>
+        <option>Pesado / Agrícola</option>
+        <option>Peças</option>
+        <option>Outros</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Preço de Venda (R$)</label>
+      <input id="svc-price" type="number">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-danger" id="svc-del-btn" onclick="deleteSvc()" style="display:none">Excluir</button>
+      <button class="btn-cancel" onclick="closeSvcModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveSvc()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit goal modal -->
+<div class="overlay" id="overlay-goal" onclick="if(event.target===this)closeGoalModal()">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:340px">
+    <div class="modal-title">Meta do Mês (R$)</div>
+    <div class="field"><input id="goal-input" type="number" placeholder="Ex: 50000"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeGoalModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveGoal()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="">
+  <div class="lightbox-info" id="lightbox-info"></div>
+</div>
+
+<!-- Receipt (hidden, print only) -->
+<div id="receipt-frame"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════════════════
+const FIN_PW = 'equipar2025'
+
+const DEFAULT_SVCS = [
+  { id:'s1',  name:'Instalação de AC',          cat:'AC Automotivo',     price:420,  cost:160 },
+  { id:'s2',  name:'Carga de Gás R134a',         cat:'AC Automotivo',     price:200,  cost:60  },
+  { id:'s3',  name:'Carga de Gás R1234yf',       cat:'AC Automotivo',     price:320,  cost:120 },
+  { id:'s4',  name:'Manutenção de Compressor',   cat:'AC Automotivo',     price:480,  cost:220 },
+  { id:'s5',  name:'Troca de Filtro de Cabine',  cat:'AC Automotivo',     price:90,   cost:30  },
+  { id:'s6',  name:'Higienização de AC',         cat:'Higienização',      price:160,  cost:40  },
+  { id:'s7',  name:'Higienização Ozônio',        cat:'Higienização',      price:220,  cost:60  },
+  { id:'s8',  name:'Reparo Elétrico Geral',      cat:'Elétrica',          price:280,  cost:80  },
+  { id:'s9',  name:'Diagnóstico Elétrico',       cat:'Elétrica',          price:120,  cost:0   },
+  { id:'s10', name:'Troca de Bateria',           cat:'Elétrica',          price:380,  cost:220 },
+  { id:'s11', name:'Instalação de Luz LED',      cat:'Elétrica',          price:180,  cost:60  },
+  { id:'s12', name:'Fabricação de Mangueira',    cat:'Mangueiras',        price:140,  cost:50  },
+  { id:'s13', name:'Troca de Mangueira AC',      cat:'Mangueiras',        price:260,  cost:90  },
+  { id:'s14', name:'Solda Especial',             cat:'Solda',             price:220,  cost:60  },
+  { id:'s15', name:'AC de Ônibus / Caminhão',    cat:'Pesado / Agrícola', price:900,  cost:400 },
+  { id:'s16', name:'AC de Trator / Colheitadeira',cat:'Pesado / Agrícola',price:1100, cost:500 },
+]
+
+const DEFAULT_TECNICOS = [
+  { id:'t1', name:'Anderson', avatar:'AN', color:'#0369A1' },
+  { id:'t2', name:'Marcos',   avatar:'MA', color:'#059669' },
+  { id:'t3', name:'Roberto',  avatar:'RO', color:'#7C3AED' },
+]
+
+const DEFAULT_FRONT_GOALS = [
+  { id:'fg1', label:'Automóvel',       goal:30000, color:'#0369A1' },
+  { id:'fg2', label:'Moto',            goal:8000,  color:'#06B6D4' },
+  { id:'fg3', label:'Veículo Pesado',  goal:20000, color:'#EA580C' },
+  { id:'fg4', label:'Agrícola',        goal:15000, color:'#059669' },
+]
+
+function load(key, def) { try { const r=localStorage.getItem(key); return r ? JSON.parse(r) : def; } catch(e) { return def; } }
+function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} }
+
+let services    = load('eq2_svcs', [])
+let ordens      = load('eq2_ordens', [])
+let tecnicos    = load('eq2_tecnicos', DEFAULT_TECNICOS)
+let expenses    = load('eq2_expenses', [])
+let goalAmount  = load('eq2_goal', 60000)
+let frontGoals  = load('eq2_frontgoals', DEFAULT_FRONT_GOALS)
+
+function uid() { return Math.random().toString(36).slice(2,10) }
+function fmtCur(v) { return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) }
+function fmtDate(d) {
+  const dt = new Date(d + 'T12:00:00')
+  return dt.toLocaleDateString('pt-BR')
+}
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+function margin(val,cost) { if(!val||val<=0) return 0; return ((val-cost)/val)*100 }
+function marginHTML(val,cost) {
+  if(!val||!cost) return ''
+  const m = margin(val,cost)
+  const cls = m>=30?'margin-good':m>=15?'margin-ok':'margin-bad'
+  const icon = m>=30?'✅':m>=15?'⚠️':'❌'
+  return `<div class="margin-preview ${cls}">${icon} Margem: ${m.toFixed(1)}% · Lucro: ${fmtCur(val-cost)}</div>`
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UNIT FILTER
+// ═══════════════════════════════════════════════════════════════════════════
+let activeUnit = 'Ambas'
+function setUnit(u) {
+  activeUnit = u
+  document.querySelectorAll('.unit-tab').forEach(b => b.classList.toggle('on', b.dataset.u === u))
+  renderHistory(); renderCrm()
+}
+function matchUnit(u) { return activeUnit === 'Ambas' || u === activeUnit }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VIEW SWITCHING
+// ═══════════════════════════════════════════════════════════════════════════
+let currentView = 'os'
+function showView(v) {
+  currentView = v
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('on'))
+  document.getElementById('view-' + v).classList.add('on')
+  document.querySelectorAll('.mainnav-btn').forEach((b,i) => b.classList.toggle('on', ['os','crm'][i] === v))
+  if (v === 'crm') renderCrm()
+  if (v === 'fin') renderFin()
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CART
+// ═══════════════════════════════════════════════════════════════════════════
+let cart = []
+function cartTotal() { return cart.reduce((s,i)=>s+i.price*i.qty, 0) }
+function cartAdd(svcId) {
+  const svc = services.find(s=>s.id===svcId)
+  if (!svc) return
+  const ex = cart.find(i=>i.id===svcId)
+  if (ex) ex.qty++
+  else cart.push({ id:svcId, name:svc.name, price:svc.price, cost:svc.cost, qty:1 })
+  renderCart()
+}
+function cartChange(id, delta) {
+  const item = cart.find(i=>i.id===id)
+  if (!item) return
+  item.qty += delta
+  if (item.qty <= 0) cart = cart.filter(i=>i.id!==id)
+  renderCart()
+}
+function cartRemove(id) { cart = cart.filter(i=>i.id!==id); renderCart() }
+
+function renderCart() {
+  const el = document.getElementById('cart-items')
+  const count = cart.reduce((s,i)=>s+i.qty, 0)
+  document.getElementById('cart-count').textContent = count + ' item' + (count!==1?'s':'')
+  document.getElementById('cart-total').textContent = fmtCur(cartTotal())
+  document.getElementById('btn-checkout').disabled = cart.length === 0
+
+  if (!cart.length) {
+    el.innerHTML = '<div class="cart-empty"><div class="cart-empty-icon">🔧</div>Adicione serviços ao carrinho</div>'
+    return
+  }
+  el.innerHTML = cart.map(i => `
+    <div class="cart-item">
+      <div class="ci-name">${esc(i.name)}</div>
+      <div class="ci-qty">
+        <button class="qty-btn" onclick="cartChange('${i.id}',-1)">−</button>
+        <span class="qty-val">${i.qty}</span>
+        <button class="qty-btn" onclick="cartChange('${i.id}',1)">＋</button>
+      </div>
+      <div class="ci-price">${fmtCur(i.price*i.qty)}</div>
+      <button class="ci-del" onclick="cartRemove('${i.id}')">✕</button>
+    </div>`).join('')
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SERVICES
+// ═══════════════════════════════════════════════════════════════════════════
+let activeCat = 'Todos'
+function allCats() { return ['Todos',...new Set(services.map(s=>s.cat))] }
+
+function renderCatTabs() {
+  const el = document.getElementById('cat-tabs')
+  el.innerHTML = allCats().map(c => `<button class="cat-tab${c===activeCat?' on':''}" onclick="setCat('${esc(c)}')">${esc(c)}</button>`).join('')
+}
+function setCat(c) { activeCat = c; renderCatTabs(); renderServices() }
+
+function renderServices() {
+  const q = document.getElementById('svc-search').value.toLowerCase()
+  const filtered = services.filter(s => {
+    const inCat = activeCat==='Todos' || s.cat===activeCat
+    const inQ   = !q || s.name.toLowerCase().includes(q) || s.cat.toLowerCase().includes(q)
+    return inCat && inQ
+  })
+  const el = document.getElementById('services-grid')
+  el.innerHTML = filtered.map(s => `
+    <div class="svc-card" ondblclick="openSvcModal('${s.id}')" onclick="cartAdd('${s.id}')">
+      <div class="svc-name">${esc(s.name)}</div>
+      <div class="svc-cat">${esc(s.cat)}</div>
+      <div class="svc-price">${fmtCur(s.price)}</div>
+    </div>`).join('')
+}
+
+// Service modal
+let editingSvcId = null
+function openSvcModal(id) {
+  editingSvcId = id || null
+  const s = id ? services.find(x=>x.id===id) : null
+  document.getElementById('svc-modal-title').textContent = s ? 'Editar Serviço' : 'Novo Serviço'
+  document.getElementById('svc-id').value    = s ? s.id : ''
+  document.getElementById('svc-name').value  = s ? s.name  : ''
+  document.getElementById('svc-cat').value   = s ? s.cat   : 'AC Automotivo'
+  document.getElementById('svc-price').value = s ? s.price : ''
+  document.getElementById('svc-del-btn').style.display = s ? 'block' : 'none'
+  document.getElementById('overlay-svc').classList.add('on')
+  setTimeout(()=>document.getElementById('svc-name').focus(), 50)
+}
+function closeSvcModal() { document.getElementById('overlay-svc').classList.remove('on') }
+function saveSvc() {
+  const name  = document.getElementById('svc-name').value.trim()
+  const price = +document.getElementById('svc-price').value
+  if (!name || !price) { toast('Preencha nome e preço'); return }
+  const obj = { name, cat: document.getElementById('svc-cat').value, price, cost: 0 }
+  if (editingSvcId) {
+    const idx = services.findIndex(s=>s.id===editingSvcId)
+    services[idx] = { ...services[idx], ...obj }
+  } else {
+    services.push({ id:uid(), ...obj })
+  }
+  save('eq2_svcs', services)
+  closeSvcModal(); renderCatTabs(); renderServices()
+  toast(editingSvcId ? 'Serviço atualizado' : 'Serviço adicionado')
+}
+function deleteSvc() {
+  if (!editingSvcId || !confirm('Excluir este serviço?')) return
+  services = services.filter(s=>s.id!==editingSvcId)
+  save('eq2_svcs', services)
+  closeSvcModal(); renderCatTabs(); renderServices()
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CHECKOUT / OS
+// ═══════════════════════════════════════════════════════════════════════════
+function openCheckout() {
+  updateCoTotal()
+  populateTecSelect('co-tecnico')
+  document.getElementById('overlay-checkout').classList.add('on')
+}
+function closeCheckout() { document.getElementById('overlay-checkout').classList.remove('on') }
+
+function selectRadio(groupId, btn) {
+  document.querySelectorAll(`#${groupId} .radio-btn`).forEach(b=>b.classList.remove('on'))
+  btn.classList.add('on')
+  if (groupId === 'co-pag-group') updateCoTotal()
+}
+function getRadio(groupId) {
+  const btn = document.querySelector(`#${groupId} .radio-btn.on`)
+  return btn ? btn.dataset.v : ''
+}
+
+function updateCoTotal() {
+  document.getElementById('co-total-display').textContent = fmtCur(cartTotal())
+}
+
+let osCounter = load('eq2_osc', 100)
+
+function finalizeOS() {
+  const client = document.getElementById('co-client').value.trim()
+  if (!client) { document.getElementById('co-client').classList.add('err'); return }
+  document.getElementById('co-client').classList.remove('err')
+  if (!pendingImg) {
+    const drop = document.getElementById('co-img-drop')
+    drop.style.borderColor = '#ff3b30'
+    drop.style.background = '#fff5f5'
+    toast('Anexe o print da conversa para continuar')
+    setTimeout(() => { drop.style.borderColor = '#e5e5e7'; drop.style.background = '#fafafa' }, 2500)
+    return
+  }
+
+  const total  = cartTotal()
+  const cost   = 0
+  const today  = new Date().toISOString().slice(0,10)
+
+  osCounter++
+  save('eq2_osc', osCounter)
+
+  const os = {
+    id: uid(), code: osCounter,
+    client,
+    veiculo:  document.getElementById('co-veiculo').value.trim(),
+    placa:    document.getElementById('co-placa').value.trim(),
+    vtipo:    document.getElementById('co-vtipo').value,
+    origem:   getRadio('co-origem-group'),
+    unit:     getRadio('co-unit-group'),
+    tecnico:  document.getElementById('co-tecnico').value,
+    obs:      document.getElementById('co-obs').value.trim(),
+    items:    JSON.parse(JSON.stringify(cart)),
+    value: total, cost,
+    date: today,
+    status: 'Concluída',
+    img: pendingImg || null,
+  }
+
+  ordens.unshift(os)
+  save('eq2_ordens', ordens)
+  closeCheckout()
+  clearImg()
+  cart = []
+  renderCart()
+  renderHistory()
+  toast(`Venda #${osCounter} registrada!`)
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════════════════════════════════════════
+function renderHistory() {
+  const visible = ordens.filter(o=>matchUnit(o.unit))
+  const tbody = document.getElementById('os-tbody')
+  if (!visible.length) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:28px;color:#aeaeb2;">Nenhuma venda registrada</td></tr>`; return }
+  tbody.innerHTML = visible.map(o => `
+    <tr>
+      <td style="font-weight:700;color:#0369A1">#${o.code}</td>
+      <td>
+        <div style="font-weight:600;font-size:12px">${esc(o.client)}</div>
+        ${o.veiculo?`<div style="font-size:11px;color:#aeaeb2">${esc(o.veiculo)}${o.placa?' · '+esc(o.placa):''}</div>`:''}
+      </td>
+      <td style="max-width:200px">
+        <div style="font-size:11px;color:#3c3c43">${(o.items||[]).map(i=>esc(i.name)).join(', ')}</div>
+      </td>
+      <td style="font-weight:700">${fmtCur(o.value)}</td>
+      <td style="font-size:12px">${esc(o.tecnico||'—')}</td>
+      <td><span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;background:${o.unit==='Prazeres'?'#FFF7ED':'#EBF8FF'};color:${o.unit==='Prazeres'?'#C2410C':'#0369A1'}">${esc(o.unit)}</span></td>
+      <td><span class="status-badge s-${(o.status||'Concluída').toLowerCase().replace('í','i').replace('á','a')}">${esc(o.status)}</span></td>
+      <td style="white-space:nowrap">
+        <button class="tbl-btn" onclick="openEditOs('${o.id}')" title="Editar">✎</button>
+      </td>
+    </tr>`).join('')
+}
+
+// Edit OS
+let editingOsId = null
+function openEditOs(id) {
+  const os = ordens.find(o=>o.id===id)
+  if (!os) return
+  editingOsId = id
+  document.getElementById('eos-id').value     = id
+  document.getElementById('eos-client').value = os.client
+  document.getElementById('eos-veiculo').value = os.veiculo || ''
+  document.getElementById('eos-value').value   = os.value
+  document.getElementById('eos-date').value    = os.date
+  document.getElementById('eos-obs').value     = os.obs || ''
+  document.getElementById('eos-vtipo').value   = os.vtipo || 'Automóvel'
+  document.getElementById('eos-unit').value    = os.unit || 'Prazeres'
+  populateTecSelect('eos-tecnico', os.tecnico)
+  document.querySelectorAll('#eos-status-group .radio-btn').forEach(b=>b.classList.toggle('on', b.dataset.v===(os.status||'Concluída')))
+  document.querySelectorAll('#eos-origem-group .radio-btn').forEach(b=>b.classList.toggle('on', b.dataset.v===(os.origem||'')))
+  document.getElementById('overlay-edit-os').classList.add('on')
+}
+function closeEditOs() { document.getElementById('overlay-edit-os').classList.remove('on') }
+function updateEosMargin() {
+  document.getElementById('eos-margin').innerHTML = marginHTML(+document.getElementById('eos-value').value, +document.getElementById('eos-cost').value)
+}
+function saveEditOs() {
+  const idx = ordens.findIndex(o=>o.id===editingOsId)
+  if (idx<0) return
+  ordens[idx] = {
+    ...ordens[idx],
+    client:  document.getElementById('eos-client').value.trim(),
+    veiculo: document.getElementById('eos-veiculo').value.trim(),
+    value:   +document.getElementById('eos-value').value,
+    date:    document.getElementById('eos-date').value,
+    status:  getRadio('eos-status-group'),
+    origem:  getRadio('eos-origem-group'),
+    tecnico: document.getElementById('eos-tecnico').value,
+    unit:    document.getElementById('eos-unit').value,
+    vtipo:   document.getElementById('eos-vtipo').value,
+    obs:     document.getElementById('eos-obs').value.trim(),
+  }
+  save('eq2_ordens', ordens)
+  closeEditOs(); renderHistory(); renderCrm()
+  toast('Venda atualizada')
+}
+function deleteOs() {
+  if (!editingOsId || !confirm('Excluir esta venda?')) return
+  ordens = ordens.filter(o=>o.id!==editingOsId)
+  save('eq2_ordens', ordens)
+  closeEditOs(); renderHistory(); renderCrm()
+  toast('Venda excluída')
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RECEIPT PRINT
+// ═══════════════════════════════════════════════════════════════════════════
+function printReceipt(os) {
+  if (!os) return
+  const items = (os.items||[]).map(i=>`
+    <tr>
+      <td style="padding:4px 0;font-size:12px">${esc(i.name)}</td>
+      <td style="padding:4px 0;font-size:12px;text-align:center">${i.qty}</td>
+      <td style="padding:4px 0;font-size:12px;text-align:right">${fmtCur(i.price*i.qty)}</td>
+    </tr>`).join('')
+
+  const html = `<div style="font-family:'Inter',sans-serif;max-width:380px;margin:0 auto;padding:20px">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:22px;font-weight:800;letter-spacing:-1px">❄️ Equipar</div>
+      <div style="font-size:11px;color:#666;margin-top:3px">Especialistas em Refrigeração e Elétrica Automotiva</div>
+      <div style="font-size:11px;color:#666">Unidade ${esc(os.unit||'')} · ${esc(os.date?fmtDate(os.date):'')}</div>
+    </div>
+    <div style="border-top:2px dashed #ccc;border-bottom:2px dashed #ccc;padding:10px 0;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="color:#666">Venda Nº</span><span style="font-weight:700">#${os.code}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="color:#666">Cliente</span><span style="font-weight:600">${esc(os.client)}</span>
+      </div>
+      ${os.veiculo?`<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:#666">Veículo</span><span>${esc(os.veiculo)}${os.placa?' · '+esc(os.placa):''}</span></div>`:''}
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="color:#666">Vendedor</span><span>${esc(os.tecnico||'—')}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px">
+        <span style="color:#666">Pagamento</span><span>${esc(os.pagamento||'—')}</span>
+      </div>
+    </div>
+    <table style="width:100%;margin-bottom:12px">
+      <thead><tr style="border-bottom:1px solid #eee">
+        <th style="text-align:left;font-size:11px;font-weight:700;padding-bottom:6px;color:#666">SERVIÇO</th>
+        <th style="text-align:center;font-size:11px;font-weight:700;padding-bottom:6px;color:#666">QTD</th>
+        <th style="text-align:right;font-size:11px;font-weight:700;padding-bottom:6px;color:#666">VALOR</th>
+      </tr></thead>
+      <tbody>${items}</tbody>
+    </table>
+    ${os.discount?`<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;color:#d4000e"><span>Desconto</span><span>− ${fmtCur(os.discount)}</span></div>`:''}
+    <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;border-top:2px solid #1d1d1f;padding-top:10px;margin-bottom:14px">
+      <span>TOTAL</span><span>${fmtCur(os.value)}</span>
+    </div>
+    ${os.warranty?`<div style="text-align:center;font-size:11px;background:#e9faf0;color:#1a8a42;border-radius:8px;padding:7px;margin-bottom:10px">✅ Garantia: ${esc(os.warranty)}</div>`:''}
+    ${os.obs?`<div style="font-size:11px;color:#666;background:#f5f5f7;border-radius:8px;padding:7px;margin-bottom:10px">Obs: ${esc(os.obs)}</div>`:''}
+    <div style="text-align:center;font-size:11px;color:#999;border-top:1px dashed #ccc;padding-top:10px">
+      Obrigado pela preferência!<br>equiparpe.com.br · @equipar_oficial
+    </div>
+  </div>`
+
+  const frame = document.getElementById('receipt-frame')
+  frame.innerHTML = html
+  window.print()
+  setTimeout(()=>{ frame.innerHTML='' }, 2000)
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CRM
+// ═══════════════════════════════════════════════════════════════════════════
+let activePeriod = 'month'
+let dailyChart = null, vtypeChart = null
+
+function setPeriod(p) {
+  activePeriod = p
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.toggle('on', b.dataset.p===p))
+  document.getElementById('custom-dates').style.display = p==='custom' ? 'flex' : 'none'
+  if (p !== 'custom') renderCrm()
+}
+function applyCrm() { renderCrm() }
+
+function getPeriodDates() {
+  const today = new Date(), fmt = d=>d.toISOString().slice(0,10)
+  switch(activePeriod) {
+    case 'today':  return { start:fmt(today), end:fmt(today) }
+    case 'week':   return { start:fmt(new Date(today-6*864e5)), end:fmt(today) }
+    case 'month':  return { start:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-01`, end:fmt(today) }
+    case 'custom': return { start:document.getElementById('date-start').value||fmt(today), end:document.getElementById('date-end').value||fmt(today) }
+  }
+}
+
+function filteredOrdens() {
+  const { start, end } = getPeriodDates()
+  return ordens.filter(o => o.date >= start && o.date <= end && matchUnit(o.unit) && o.status !== 'Cancelada')
+}
+
+function renderCrm() {
+  if (currentView !== 'crm') return
+  const os = filteredOrdens()
+  const revenue = os.reduce((s,o)=>s+o.value, 0)
+  const cost    = os.reduce((s,o)=>s+o.cost, 0)
+  const ticket  = os.length ? revenue/os.length : 0
+
+  // KPIs
+  document.getElementById('kpi-grid').innerHTML = [
+    { icon:'💰', label:'Receita', val:fmtCur(revenue), bg:'#EBF8FF' },
+    { icon:'📋', label:'Vendas', val:os.length, bg:'#F0FFF4' },
+    { icon:'🎯', label:'Ticket Médio', val:fmtCur(ticket), bg:'#FFFAF0' },
+  ].map(k=>`<div class="kpi-card">
+    <div class="kpi-icon" style="background:${k.bg}">${k.icon}</div>
+    <div class="kpi-val">${k.val}</div>
+    <div class="kpi-lbl">${k.label}</div>
+  </div>`).join('')
+
+  // Daily chart
+  const dayMap = {}
+  os.forEach(o=>{ dayMap[o.date]=(dayMap[o.date]||0)+o.value })
+  const days = Object.keys(dayMap).sort()
+  if (dailyChart) dailyChart.destroy()
+  dailyChart = new Chart(document.getElementById('chart-daily'), {
+    type:'line',
+    data:{
+      labels: days.map(d=>{ const dt=new Date(d+'T12:00:00'); return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) }),
+      datasets:[{ data:days.map(d=>dayMap[d]), borderColor:'#0369A1', backgroundColor:'rgba(3,105,161,.08)', fill:true, tension:.4, pointRadius:3, pointBackgroundColor:'#0369A1' }]
+    },
+    options:{ plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false},ticks:{font:{size:10}}}, y:{grid:{color:'#f2f2f7'},ticks:{font:{size:10},callback:v=>'R$'+Number(v/1000).toFixed(0)+'k'}} } }
+  })
+
+  // Origem
+  const ORIGIN_COLORS = { WhatsApp:'#25D366', Instagram:'#E1306C', Indicação:'#7C3AED', Passante:'#F59E0B', Google:'#0369A1', 'Tráfego Pago':'#EA580C' }
+  const origemMap = {}
+  os.forEach(o=>{ origemMap[o.origem||'Outros']=(origemMap[o.origem||'Outros']||0)+1 })
+  const total = os.length || 1
+  document.getElementById('origin-list').innerHTML = Object.entries(origemMap)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>`<li class="origin-item">
+      <div class="origin-dot" style="background:${ORIGIN_COLORS[k]||'#aeaeb2'}"></div>
+      <span class="origin-name">${esc(k)}</span>
+      <span class="origin-val">${v}</span>
+      <span class="origin-pct">${Math.round(v/total*100)}%</span>
+    </li>`).join('')
+
+  // Tipo de veículo chart
+  const vtMap = {}
+  os.forEach(o=>{ vtMap[o.vtipo||'Automóvel']=(vtMap[o.vtipo||'Automóvel']||0)+o.value })
+  const VTYPE_COLORS = ['#0369A1','#06B6D4','#EA580C','#059669']
+  const vtLabels = Object.keys(vtMap), vtData = Object.values(vtMap)
+  if (vtypeChart) vtypeChart.destroy()
+  vtypeChart = new Chart(document.getElementById('chart-vtype'), {
+    type:'bar',
+    data:{ labels:vtLabels, datasets:[{ data:vtData, backgroundColor:vtLabels.map((_,i)=>VTYPE_COLORS[i%4]), borderRadius:8, borderSkipped:false }] },
+    options:{ plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false},ticks:{font:{size:11}}}, y:{grid:{color:'#f2f2f7'},ticks:{font:{size:10},callback:v=>'R$'+Number(v/1000).toFixed(0)+'k'}} } }
+  })
+
+  // Unit breakdown
+  const unitMap = { Prazeres:0, Goiana:0 }
+  ordens.filter(o=>o.date>=getPeriodDates().start && o.date<=getPeriodDates().end && o.status!=='Cancelada')
+        .forEach(o=>{ if(unitMap[o.unit]!==undefined) unitMap[o.unit]+=o.value })
+  const totalUnit = Object.values(unitMap).reduce((a,b)=>a+b,0)||1
+  const UNIT_COLORS = { Prazeres:'#EA580C', Goiana:'#0369A1' }
+  document.getElementById('unit-list').innerHTML = Object.entries(unitMap)
+    .map(([k,v])=>`<li class="origin-item">
+      <div class="origin-dot" style="background:${UNIT_COLORS[k]}"></div>
+      <span class="origin-name">${k}</span>
+      <span class="origin-val">${fmtCur(v)}</span>
+      <span class="origin-pct">${Math.round(v/totalUnit*100)}%</span>
+    </li>`).join('')
+
+  // Galeria
+  renderGallery()
+
+  // Vendedores
+  const { start: vs, end: ve } = getPeriodDates()
+  const periodOs = ordens.filter(o=>o.date>=vs && o.date<=ve && o.status!=='Cancelada')
+  document.getElementById('tecnico-list').innerHTML = tecnicos.map(t=>{
+    const count = periodOs.filter(o=>o.tecnico===t.name).length
+    return `<div class="tecnico-item">
+      <div class="tecnico-avatar" style="background:${t.color}22;color:${t.color}">${esc(t.avatar)}</div>
+      <div class="tecnico-name">${esc(t.name)}</div>
+      <div class="tecnico-count">${count} venda(s) no período</div>
+      <button class="tecnico-del" onclick="deleteTecnico('${t.id}')">✕</button>
+    </div>`
+  }).join('')
+
+  // Recent OS
+  const recent = [...ordens].filter(o=>o.date>=getPeriodDates().start&&o.date<=getPeriodDates().end).slice(0,10)
+  document.getElementById('crm-tbody').innerHTML = recent.length
+    ? recent.map(o=>`<tr>
+        <td style="font-weight:700;color:#0369A1">#${o.code}</td>
+        <td style="font-size:12px">${esc(o.client)}</td>
+        <td style="font-weight:700">${fmtCur(o.value)}</td>
+        <td style="font-size:12px">${esc(o.tecnico||'—')}</td>
+        <td style="font-size:12px">${esc(o.unit||'—')}</td>
+        <td><span class="status-badge s-${(o.status||'Concluída').toLowerCase().replace('í','i').replace('á','a')}">${esc(o.status)}</span></td>
+      </tr>`).join('')
+    : `<tr><td colspan="6" style="text-align:center;padding:24px;color:#aeaeb2;">Nenhuma OS no período</td></tr>`
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FINANCEIRO
+// ═══════════════════════════════════════════════════════════════════════════
+let finUnlocked = false
+function checkFinPw() {
+  const pw = document.getElementById('fin-pw').value
+  if (pw === FIN_PW) {
+    finUnlocked = true
+    document.getElementById('fin-lock').style.display = 'none'
+    document.getElementById('fin-content').style.display = 'block'
+    renderFin()
+  } else {
+    document.getElementById('fin-pw').classList.add('err')
+    setTimeout(()=>document.getElementById('fin-pw').classList.remove('err'), 1200)
+  }
+}
+
+function renderFin() {
+  if (!finUnlocked) return
+  const today = new Date()
+  const monthStart = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-01`
+  const monthOs = ordens.filter(o=>o.date>=monthStart && o.status!=='Cancelada')
+  const revenue = monthOs.reduce((s,o)=>s+o.value, 0)
+  const cost    = monthOs.reduce((s,o)=>s+o.cost, 0)
+  const profit  = revenue - cost
+  const marg    = revenue > 0 ? (profit/revenue)*100 : 0
+
+  // KPIs
+  document.getElementById('fin-kpi-grid').innerHTML = [
+    { icon:'💰', lbl:'Receita Bruta',   val:fmtCur(revenue),          bg:'#EBF8FF', c:'#0369A1' },
+    { icon:'📦', lbl:'Custos',          val:fmtCur(cost),             bg:'#FFF5F5', c:'#ff3b30' },
+    { icon:'💵', lbl:'Lucro Bruto',     val:fmtCur(profit),           bg:'#F0FFF4', c:'#059669' },
+    { icon:'📊', lbl:'Margem',          val:marg.toFixed(1)+'%',      bg:'#F5F3FF', c:'#7C3AED' },
+  ].map(k=>`<div class="kpi-card">
+    <div class="kpi-icon" style="background:${k.bg};color:${k.c}">${k.icon}</div>
+    <div class="kpi-val" style="color:${k.c}">${k.val}</div>
+    <div class="kpi-lbl">${k.lbl}</div>
+  </div>`).join('')
+
+  // Global goal bar
+  const pct = Math.min(goalAmount>0 ? (revenue/goalAmount)*100 : 0, 100)
+  document.getElementById('goal-revenue').textContent = fmtCur(revenue)
+  document.getElementById('goal-pct').textContent = pct.toFixed(0)+'%'
+  document.getElementById('goal-bar-fill').style.width = pct+'%'
+  document.getElementById('goal-target').textContent = fmtCur(goalAmount)
+  document.getElementById('goal-remaining').textContent = fmtCur(Math.max(0, goalAmount-revenue))
+
+  // Front goals
+  document.getElementById('front-goals').innerHTML = frontGoals.map(fg => {
+    const fgRevenue = monthOs.filter(o=>(o.vtipo||'Automóvel')===fg.label).reduce((s,o)=>s+o.value, 0)
+    const fpct = Math.min(fg.goal>0?(fgRevenue/fg.goal)*100:0, 100)
+    return `<div class="goal-item">
+      <div class="goal-item-head">
+        <span class="goal-item-label">${esc(fg.label)}</span>
+        <span class="goal-item-pct" style="color:${fg.color}">${fpct.toFixed(0)}%</span>
+      </div>
+      <div class="goal-bar"><div class="goal-bar-fill" style="width:${fpct}%;background:${fg.color}"></div></div>
+      <div class="goal-sub">
+        <span>${fmtCur(fgRevenue)} de ${fmtCur(fg.goal)}</span>
+        <span>Lucro: ${fmtCur(monthOs.filter(o=>(o.vtipo||'Automóvel')===fg.label).reduce((s,o)=>s+(o.value-o.cost),0))}</span>
+      </div>
+    </div>`
+  }).join('')
+
+  // Expenses
+  const monthExp = expenses.filter(e=>e.date>=monthStart)
+  const totalExp = monthExp.reduce((s,e)=>s+e.amount, 0)
+  document.getElementById('total-expenses-lbl').textContent = '− ' + fmtCur(totalExp)
+  document.getElementById('expense-list').innerHTML = monthExp.length
+    ? monthExp.map(e=>`<div class="expense-item">
+        <span class="exp-cat">${esc(e.cat)}</span>
+        <span class="exp-desc">${esc(e.desc)}</span>
+        <span class="exp-val">− ${fmtCur(e.amount)}</span>
+        <span class="exp-date">${fmtDate(e.date)}</span>
+        <button class="exp-del" onclick="deleteExpense('${e.id}')">✕</button>
+      </div>`).join('')
+    : '<div style="text-align:center;padding:20px;color:#aeaeb2;font-size:13px">Nenhuma despesa este mês</div>'
+
+}
+
+// Expenses
+function addExpense() {
+  const cat    = document.getElementById('exp-cat').value
+  const desc   = document.getElementById('exp-desc').value.trim()
+  const amount = +document.getElementById('exp-val').value
+  const date   = document.getElementById('exp-date').value || new Date().toISOString().slice(0,10)
+  if (!cat || !amount) { toast('Preencha categoria e valor'); return }
+  expenses.unshift({ id:uid(), cat, desc, amount, date })
+  save('eq2_expenses', expenses)
+  document.getElementById('exp-desc').value = ''
+  document.getElementById('exp-val').value = ''
+  renderFin()
+  toast('Despesa adicionada')
+}
+function deleteExpense(id) {
+  if (!confirm('Excluir despesa?')) return
+  expenses = expenses.filter(e=>e.id!==id)
+  save('eq2_expenses', expenses)
+  renderFin()
+}
+
+// Goal
+function editGoal() { document.getElementById('goal-input').value = goalAmount; document.getElementById('overlay-goal').classList.add('on') }
+function closeGoalModal() { document.getElementById('overlay-goal').classList.remove('on') }
+function saveGoal() {
+  const v = +document.getElementById('goal-input').value
+  if (!v) return
+  goalAmount = v
+  save('eq2_goal', goalAmount)
+  closeGoalModal(); renderFin()
+}
+
+// Técnicos
+const TECNICO_COLORS = ['#0369A1','#059669','#7C3AED','#EA580C','#D97706','#0891B2','#BE185D']
+function populateTecSelect(selId, current) {
+  const sel = document.getElementById(selId)
+  sel.innerHTML = tecnicos.map(t=>`<option${t.name===current?' selected':''}>${esc(t.name)}</option>`).join('')
+}
+function addTecnico() {
+  const name = document.getElementById('new-tecnico').value.trim()
+  if (!name) return
+  const color = TECNICO_COLORS[tecnicos.length % TECNICO_COLORS.length]
+  const avatar = name.slice(0,2).toUpperCase()
+  tecnicos.push({ id:uid(), name, avatar, color })
+  save('eq2_tecnicos', tecnicos)
+  document.getElementById('new-tecnico').value = ''
+  renderFin()
+}
+function deleteTecnico(id) {
+  if (!confirm('Remover técnico?')) return
+  tecnicos = tecnicos.filter(t=>t.id!==id)
+  save('eq2_tecnicos', tecnicos)
+  renderFin()
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// IMAGE UPLOAD
+// ═══════════════════════════════════════════════════════════════════════════
+let pendingImg = null
+
+function handleImgUpload(input) {
+  const file = input.files[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = e => {
+    pendingImg = e.target.result
+    document.getElementById('co-img-thumb').src = pendingImg
+    document.getElementById('co-img-preview').style.display = 'block'
+    document.getElementById('co-img-placeholder').style.display = 'none'
+    document.getElementById('co-img-drop').style.borderColor = '#0369A1'
+  }
+  reader.readAsDataURL(file)
+}
+
+function clearImg() {
+  pendingImg = null
+  document.getElementById('co-img-input').value = ''
+  document.getElementById('co-img-thumb').src = ''
+  document.getElementById('co-img-preview').style.display = 'none'
+  document.getElementById('co-img-placeholder').style.display = 'block'
+  document.getElementById('co-img-drop').style.borderColor = '#e5e5e7'
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GALLERY
+// ═══════════════════════════════════════════════════════════════════════════
+function renderGallery() {
+  const el = document.getElementById('gallery-grid')
+  if (!el) return
+  const withImg = ordens.filter(o => o.img)
+  if (!withImg.length) {
+    el.innerHTML = '<div class="gallery-empty">Nenhum print anexado ainda.<br>Adicione prints ao finalizar uma venda.</div>'
+    return
+  }
+  el.innerHTML = withImg.map(o => `
+    <div class="gallery-card" onclick="openLightbox('${o.id}')">
+      <img class="gallery-img" src="${o.img}" alt="Print ${o.client}">
+      <div class="gallery-info">
+        <div class="gallery-client">${esc(o.client)}</div>
+        <div class="gallery-meta">#${o.code} · ${fmtDate(o.date)}</div>
+        ${o.origem ? `<span class="gallery-origin">${esc(o.origem)}</span>` : ''}
+      </div>
+    </div>`).join('')
+}
+
+function openLightbox(id) {
+  const o = ordens.find(x => x.id === id)
+  if (!o || !o.img) return
+  document.getElementById('lightbox-img').src = o.img
+  document.getElementById('lightbox-info').textContent = `${o.client} · #${o.code} · ${fmtDate(o.date)}${o.origem ? ' · ' + o.origem : ''}`
+  document.getElementById('lightbox').classList.add('on')
+}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('on') }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════════════════════
+let toastTimer = null
+function toast(msg) {
+  const el = document.getElementById('toast')
+  el.textContent = msg
+  el.classList.add('show')
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2500)
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// KEYBOARD
+// ═══════════════════════════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeCheckout(); closeEditOs(); closeSvcModal(); closeGoalModal()
+  }
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════
+renderCatTabs()
+renderServices()
+renderCart()
+renderHistory()
+</script>
+</body>
+</html>
