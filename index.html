@@ -947,6 +947,10 @@ function marginHTML(val,cost) {
 // UNIT FILTER
 // ═══════════════════════════════════════════════════════════════════════════
 let activeUnit = 'Ambas'
+let currentView = 'os'
+let editingSvcId = null
+let editingOsId = null
+
 function setUnit(u) {
   activeUnit = u
   document.querySelectorAll('.unit-tab').forEach(b => b.classList.toggle('on', b.dataset.u === u))
@@ -957,7 +961,6 @@ function matchUnit(u) { return activeUnit === 'Ambas' || u === activeUnit }
 // ═══════════════════════════════════════════════════════════════════════════
 // VIEW SWITCHING
 // ═══════════════════════════════════════════════════════════════════════════
-let currentView = 'os'
 function showView(v) {
   currentView = v
   document.querySelectorAll('.view').forEach(el => el.classList.remove('on'))
@@ -1042,7 +1045,6 @@ function renderServices() {
 }
 
 // Service modal
-let editingSvcId = null
 function openSvcModal(id) {
   editingSvcId = id || null
   const s = id ? services.find(x=>x.id===id) : null
